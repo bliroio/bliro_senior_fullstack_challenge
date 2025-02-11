@@ -1,5 +1,7 @@
 import mongoose from 'mongoose';
 import Meeting from './models/meeting';
+import Tenant from './models/tenant';
+import Room from './models/room';
 
 const dbUri = process.env.MONGODB_URI || 'fallback_default_mongodb_uri';
 
@@ -20,28 +22,62 @@ const connectDB = async () => {
 
 // Function to reset database
 const resetDatabase = async () => {
-  console.log('Resetting database - PLEASE WAIT...');
+  try {
+    // Clear existing data
+    await Promise.all([
+      Meeting.deleteMany({}),
+      Room.deleteMany({}),
+      Tenant.deleteMany({}),
+    ]);
 
-  // Example: Drop collections or specific documents
-  await Meeting.deleteMany({});
-
-  const meetings = [];
-  const now = new Date().getTime();
-  
-  for (let i = 0; i < 10000; i++) {
-    const randomStartDate = new Date(
-      // Random date between now and 24 hours later
-      now + Math.floor(Math.random() * 1000 * 60 * 60 * 24)
-    );
-
-    meetings.push({
-      title: `Dummy Meeting ${i + 1}`,
-      startTime: randomStartDate,
-      endTime: new Date(randomStartDate.getTime() + 60 * 60 * 1000), // 1 hour later
+    // Create a test tenant
+    const tenant = await Tenant.create({
+      name: 'Test Tenant',
+      description: 'Test Tenant Description',
     });
-  }
 
-  await Meeting.insertMany(meetings);
+    console.log('Tenant created:', tenant);
+
+    // Create some rooms
+    const rooms = await Room.insertMany([
+      {
+        tenant: tenant._id,
+        name: 'Conference Room A',
+        capacity: 10,
+        features: new Map([
+          ['hasProjector', true],
+          ['hasVideoConference', true],
+        ]),
+      },
+      {
+        tenant: tenant._id,
+        name: 'Meeting Room B',
+        capacity: 6,
+        features: new Map([['hasWhiteboard', true]]),
+      },
+    ]);
+
+    // Create some meetings
+    const now = new Date();
+    const meetings = [];
+
+    for (let i = 0; i < 10; i++) {
+      const startTime = new Date(now.getTime() + i * 2 * 60 * 60 * 1000); // Every 2 hours
+      meetings.push({
+        room: rooms[i % rooms.length]._id,
+        tenant: tenant._id,
+        title: `Meeting ${i + 1}`,
+        startTime,
+        endTime: new Date(startTime.getTime() + 60 * 60 * 1000), // 1 hour duration
+      });
+    }
+
+    await Meeting.insertMany(meetings);
+    console.log('Sample data inserted successfully');
+  } catch (error) {
+    console.error('Error seeding database:', error);
+    throw error;
+  }
 };
 
 export default connectDB;
