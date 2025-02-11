@@ -114,17 +114,56 @@ router.delete('/:id', meetingController.deleteMeeting);
  * @openapi
  * /api/meetings:
  *   get:
- *     summary: Lists all the meetings
+ *     summary: Lists all the meetings with pagination
  *     tags: [Meetings]
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *         description: Page number for pagination
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *         description: Number of items per page
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Search term to filter meetings by title
  *     responses:
  *       200:
- *         description: A list of meetings
+ *         description: Paginated list of meetings
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Meeting'
+ *               type: object
+ *               properties:
+ *                 docs:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Meeting'
+ *                 totalDocs:
+ *                   type: number
+ *                 limit:
+ *                   type: number
+ *                 totalPages:
+ *                   type: number
+ *                 page:
+ *                   type: number
+ *                 pagingCounter:
+ *                   type: number
+ *                 hasPrevPage:
+ *                   type: boolean
+ *                 hasNextPage:
+ *                   type: boolean
+ *                 prevPage:
+ *                   type: number
+ *                   nullable: true
+ *                 nextPage:
+ *                   type: number
+ *                   nullable: true
  *       500:
  *         description: Server error
  */

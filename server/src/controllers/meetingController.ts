@@ -50,7 +50,14 @@ const deleteMeeting = async (req: any, res: any) => {
 
 const listMeetings = async (req: any, res: any) => {
   try {
-    const meetings = await meetingService.listMeetings();
+    const { page, limit, search } = req.query;
+    const options = {
+      page: parseInt(page as string) || 1,
+      limit: parseInt(limit as string) || 10,
+      search: search as string,
+    };
+
+    const meetings = await meetingService.listMeetings(options);
     res.json(meetings);
   } catch (error: any) {
     res.status(500).json({ message: error.message });
